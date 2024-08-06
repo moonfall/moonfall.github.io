@@ -5,17 +5,17 @@
 <body>
   <h1>Memory workload test</h1>
   <label for="loadtime">Load time</label>
-  <input id="loadtime" size="64"/><br />
+  <input id="loadtime" size="64" readonly /><br />
   <label for="lasttime">Last time</label>
-  <input id="lasttime" size="64"/><br />
+  <input id="lasttime" size="64" readonly /><br />
   <pre id="lifePre"></pre>
   <label for="blocksize">Block size (MiB)</label>
   <input id="blocksize" type="number" value="128" /><br />
   <label for="total">Total allocated</label>
-  <input id="total" type="range" min="128" max="4096" step="128"/>
-  <input id="totalnum" min="128" max="4096" step="128"/><br />
+  <input id="totalslider" type="range" min="0" max="4096" step="128"/>
+  <input id="totalnum" type="number" min="0" max="4096" step="128"/><br />
   <button id="alloc">Allocate memory</button>
-  <button id="free">Free memory</button>
+  <button id="free">Free all memory</button>
   <button id="update">Update status</button>
 
   <pre id="statusPre"></pre>
@@ -35,7 +35,7 @@
     allocOnce();
   }
   free.onclick = () => {
-    show("Free clicked");
+    show("Free all clicked");
     allocated = [];
     updateStatus();
   }
@@ -43,12 +43,47 @@
     show("Update clicked");
     updateStatus();
   }
-  total.onchange = () => {
-    show("Move clicked");
-    updateStatus();
-    totalnum.value = total.value;
+  totalslider.onchange = () => {
+    show("Set clicked");
+    totalnum.value = totalslider.value;
+    setAllocatedMemory(totalslider.value);
+  }
+  totalslider.oninput = () => {
+    // Update the numeric value in real time.
+    totalnum.value = totalslider.value;
   }
 
+  totalnum.oninput = () => {
+    // Update the numeric value in real time.
+    show("Set value");
+    totalslider.value = totalnum.value;
+    setAllocatedMemory(totalnum.value);
+  }
+
+  function currentAllocatedMiB() {
+    let total = 0;
+    for (let i = 0; i < allocated.length; ++i) {
+      total += allocated[i].byteLength;
+    }
+    return total / (1024 * 1024);
+  }
+
+  function setAllocatedMemory(target) {
+    let frees = 0;
+    while (currentAllocatedMiB() > target) {
+      allocated.pop();
+      ++frees;
+      updateStatus();
+    }
+    let allocs = 0;
+    while (currentAllocatedMiB() < target) {
+      let sizeMiB = Math.min(target - currentAllocatedMiB(), blocksize.value);
+      allocBuffer(sizeMiB * 1024 * 1024);
+      ++allocs;
+      updateStatus();
+    }
+    show(frees + " blocks freed; " + allocs + " blocks allocated");
+  }
 
   // Update the current status of the page.
   function updateStatus() {
@@ -57,11 +92,11 @@
     const elapsed = now - startTime;
     lifePre.textContent = (elapsed / 1000) + " seconds";
 
-    let total = 0;
-    for (let i = 0; i < allocated.length; ++i) {
-      total += allocated[i].byteLength;
-    }
-    allocPre.textContent = total + " bytes;  " + allocated.length + " blocks";
+    let total = currentAllocatedMiB();
+    allocPre.textContent = total + " MiB;  " + allocated.length + " blocks";
+
+    totalslider.value = total;
+    totalnum.value = total;
   }
 
   // Allocate and fill a single block.
@@ -116,6 +151,8 @@
         allocOnce();
       }
     }
+
+    updateStatus();
   }
 
   startup();
