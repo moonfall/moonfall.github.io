@@ -33,6 +33,8 @@
   // Array of ArrayBuffer allocations.
   var allocatedBlocks = [];
 
+  var allocationFailures = 0;
+
   // Button handlers.
 
   // Allocate and fill a single block.
@@ -43,6 +45,7 @@
       allocBuffer(sizeMiB);
     }
     catch(err) {
+      ++allocationFailures;
       show(`Allocation of ${sizeMiB} failed`);
     }
     updateStatus();
@@ -110,6 +113,7 @@
         allocBuffer(sizeMiB);
       }
       catch(err) {
+        ++allocationFailures;
         show(`Allocation of ${sizeMiB} failed`);
         updateStatus();
         return;
@@ -129,7 +133,7 @@
     document.getElementById('life-pre').textContent = `${elapsedSecs} seconds`;
 
     let total = currentAllocatedMiB();
-    let summary = `${total} MiB allocated; ${allocatedBlocks.length} blocks`;
+    let summary = `${total} MiB allocated; ${allocatedBlocks.length} blocks; ${allocationFailures} failures`;
     document.getElementById('alloc-pre').textContent = summary;
 
     document.getElementById('total-slider').value = total;
