@@ -14,6 +14,8 @@
 
   <label for="block-size">Block size (MiB)</label>
   <input id="block-size" type="number" value="128" /><br />
+  <label for="compression-percent">Compressibility percent</label>
+  <input id="compression-percent" type="number" value="0" min="0" max="100" step="5" /><br />
   <label for="total-slider">Total allocated</label>
   <input id="total-slider" type="range" min="0" max="4096" step="128" onchange="setSlider()" oninput="updateSlider()" />
   <input id="total-num" type="number" min="0" max="4096" step="128" oninput="setMemory()" /><br />
@@ -149,10 +151,15 @@
 
   // Fill a buffer with random data.
   function fillBuffer(buffer) {
+    // Achieve requested compressibility by mixing random data with the initial
+    // zeroed buffer.
+    const ratio = document.getElementById('compression-percent').value / 100;
+    const randomLength = buffer.byteLength * (1.0 - ratio);
+
     // Crypto.getRandomValues can generate up to 64KiB at a time.
     const maxBlockSize = 64 * 1024;
-    for (let i = 0; i < buffer.byteLength; i += maxBlockSize) {
-      const bytesRemaining = buffer.byteLength - i;
+    for (let i = 0; i < randomLength; i += maxBlockSize) {
+      const bytesRemaining = randomLength - i;
       const viewSize = Math.min(bytesRemaining, maxBlockSize);
       const view = new Int8Array(buffer, i, viewSize);
       crypto.getRandomValues(view);
