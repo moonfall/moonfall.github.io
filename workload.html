@@ -6,26 +6,39 @@
 <body>
   <h1>Memory workload test</h1>
 
-  <label for="load-time">Load time</label>
-  <input id="load-time" size="64" readonly /><br />
-  <label for="last-time">Last update time</label>
-  <input id="last-time" size="64" readonly /><br />
-  <pre id="life-pre"></pre>
+  <div>
+    <label for="load-time">Load time</label>
+    <input id="load-time" size="64" readonly /><br />
+    <label for="last-time">Last update time</label>
+    <input id="last-time" size="64" readonly /><br />
+    <pre id="life-pre"></pre>
+  </div>
 
-  <label for="block-size">Block size (MiB)</label>
-  <input id="block-size" type="number" value="128" /><br />
-  <label for="compression-percent">Compressibility percent</label>
-  <input id="compression-percent" type="number" value="0" min="0" max="100" step="5" /><br />
-  <label for="total-slider">Total allocated</label>
-  <input id="total-slider" type="range" min="0" max="4096" step="128" onchange="setSlider()" oninput="updateSlider()" />
-  <input id="total-num" type="number" min="0" max="4096" step="128" oninput="setMemory()" /><br />
+  <div>
+    <label for="block-size">Block size (MiB)</label>
+    <input id="block-size" type="number" value="128" /><br />
+    <label for="compression-percent">Compressibility percent</label>
+    <input id="compression-percent" type="number" value="0" min="0" max="100" step="5" /><br />
+    <label for="total-slider">Total allocated</label>
+    <input id="total-slider" type="range" min="0" max="4096" step="128" onchange="setSlider()" oninput="updateSlider()" />
+    <input id="total-num" type="number" min="0" max="4096" step="128" oninput="setMemory()" /><br />
 
-  <button id="alloc" onclick="allocBlock()">Allocate block</button>
-  <button id="free" onclick="freeAll()">Free all memory</button>
-  <button id="update" onclick="update()">Update status</button>
+    <button id="alloc" onclick="allocBlock()">Allocate block</button>
+    <button id="free" onclick="freeAll()">Free all memory</button>
+    <button id="update" onclick="update()">Update status</button>
+  </div>
 
-  <pre id="status-pre"></pre>
-  <pre id="alloc-pre"></pre>
+  <div>
+    <label for="audio-clip">Audio clip</label>
+    <input id="audio-clip" value="ZOOM0017_Tr12.mp3" /><br />
+    <label for="play-audio">Play audio</label>
+    <input id="play-audio" type="checkbox" onchange="playAudio()" />
+  </div>
+
+  <div>
+    <pre id="status-pre"></pre>
+    <pre id="alloc-pre"></pre>
+  </div>
 </body>
 
 <script>
@@ -36,6 +49,8 @@
   var allocatedBlocks = [];
 
   var allocationFailures = 0;
+
+  var audio;
 
   // Button handlers.
 
@@ -85,6 +100,21 @@
     // Update the slider value.
     document.getElementById('total-slider').value = document.getElementById('total-num').value;
     setAllocatedMemory(document.getElementById('total-num').value);
+  }
+
+  function playAudio() {
+    let play = document.getElementById('play-audio').checked;
+    if (play) {
+      const clip = document.getElementById('audio-clip').value;
+      audio = new Audio(clip);
+      show(`Play audio ${clip}`);
+      audio.play();
+    } else {
+      show('Stop audio');
+      if (audio) {
+        audio.pause();
+      }
+    }
   }
 
   // Calculate the total amount of allocated memory.
@@ -190,6 +220,16 @@
         allocBlock();
       }
     }
+    if (params.has('audioclip')) {
+      document.getElementById('audio-clip').value = params.get('audioclip');
+    }
+    /*
+    if (params.has('play') && params.get('play')) {
+      // Auto-playback does not work.
+      document.getElementById('play-audio').checked = true;
+      playAudio();
+    }
+    */
 
     updateStatus();
   }
