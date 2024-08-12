@@ -214,6 +214,9 @@
     if (params.has('blocksize')) {
       document.getElementById('block-size').value = params.get('blocksize');
     }
+    if (params.has('compress')) {
+      document.getElementById('compression-percent').value = params.get('compress');
+    }
     if (params.has('alloc')) {
       // Perform allocations.
       for (let i = 0; i < params.get('alloc'); ++i) {
